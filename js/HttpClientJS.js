@@ -1,45 +1,49 @@
-export const HttpClient = (function HttpClient() {
+export const HttpClient = new (function HttpClient() {
   this.api_queue = [];
   this.api_queue_delay = 0;
-  this.get = function (f, callback) {
+  this.get = function (f, callback, headers = {}) {
     this.api_queue.push({
       f: f,
       type: "GET",
       data: null,
       callback: callback,
       loading: false,
+      headers
     });
-    execApiQueue();
+    setTimeout(execApiQueue.bind(this));
   };
-  this.post = function (f, data, callback) {
+  this.post = function (f, data, callback, headers = {}) {
     this.api_queue.push({
       f: f,
       type: "POST",
       data: data,
       callback: callback,
       loading: false,
+      headers
     });
-    execApiQueue();
+    setTimeout(execApiQueue.bind(this));
   };
-  this.put = function (f, data, callback) {
+  this.put = function (f, data, callback, headers = {}) {
     this.api_queue.push({
       f: f,
       type: "PUT",
       data: data,
       callback: callback,
       loading: false,
+      headers
     });
-    execApiQueue();
+    setTimeout(execApiQueue.bind(this));
   };
-  this.delete = function (f, callback) {
+  this.delete = function (f, callback, headers = {}) {
     this.api_queue.push({
       f: f,
       type: "DELETE",
       data: null,
       callback: callback,
       loading: false,
+      headers
     });
-    execApiQueue();
+    setTimeout(execApiQueue.bind(this));
   };
   function execApiQueue() {
     if (this.api_queue.length == 0) return;
@@ -81,12 +85,13 @@ export const HttpClient = (function HttpClient() {
           });
         }
         this.api_queue.splice(0, 1);
-        setTimeout(this.execApiQueue.bind(this), this.api_queue_delay);
+        setTimeout(execApiQueue.bind(this), this.api_queue_delay);
       }
     });
     xhr.open(type, f);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.withCredentials = true;
+    for (let header in queue.headers || {}) {
+      xhr.setRequestHeader(header, (queue.headers || {})[header]);
+    }
     xhr.send(JSON.stringify(data));
   }
 })();
